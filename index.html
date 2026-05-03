@@ -480,11 +480,11 @@
   <span class="p">}</span>
 
   <span class="k">create</span> <span class="p">{</span>
-    <span class="k">before</span><span class="p">(</span><span class="f">body</span><span class="p">,</span> <span class="f">headers</span><span class="p">) {</span>
-      <span class="f">body</span><span class="n">.amount </span><span class="p">&gt;</span><span class="n"> 0         </span><span class="s">: "Amount must be positive"</span>
-      <span class="f">headers</span><span class="n">.authorization </span><span class="p">!=</span><span class="n"> null </span><span class="s">: "Unauthorized"</span>
+    <span class="k">before</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
+      <span class="f">body</span><span class="n">.amount </span><span class="p">&gt;</span><span class="n"> 0           </span><span class="s">: "Amount must be positive"</span>
+      <span class="f">body</span><span class="n">.amount </span><span class="p">&lt;=</span><span class="n"> 10000      </span><span class="s">: "Amount exceeds limit"</span>
     <span class="p">}</span>
-    <span class="k">after</span><span class="p">(</span><span class="f">body</span><span class="p">,</span> <span class="f">headers</span><span class="p">) {</span>
+    <span class="k">after</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
       <span class="f">Notify</span><span class="p">(</span><span class="f">customer_id</span><span class="n">: </span><span class="f">body</span><span class="n">.customer_id  </span><span class="f">event</span><span class="n">: </span><span class="s">"order_created"</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
@@ -619,8 +619,9 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
     <span class="f">amount</span><span class="n">:      </span><span class="t">currency</span>  <span class="k">positive</span>
   <span class="p">}</span>
   <span class="k">create</span> <span class="p">{</span>
-    <span class="k">before</span><span class="p">(</span><span class="f">body</span><span class="p">,</span> <span class="f">headers</span><span class="p">) {</span>
-      <span class="f">headers</span><span class="n">.authorization </span><span class="p">!=</span><span class="n"> null </span><span class="s">: "Unauthorized"</span>
+    <span class="k">before</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
+      <span class="f">body</span><span class="n">.amount </span><span class="p">&gt;</span><span class="n"> 0      </span><span class="s">: "Amount must be positive"</span>
+      <span class="f">body</span><span class="n">.amount </span><span class="p">&lt;=</span><span class="n"> 10000 </span><span class="s">: "Amount exceeds limit"</span>
     <span class="p">}</span>
     <span class="k">after</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
       <span class="f">Notify</span><span class="p">(</span><span class="f">customer_id</span><span class="n">: </span><span class="f">body</span><span class="n">.customer_id</span><span class="p">)</span>
