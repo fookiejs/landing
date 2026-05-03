@@ -441,6 +441,7 @@
     <a href="#philosophy">Philosophy</a>
     <a href="#fql">FQL</a>
     <a href="#how">How it works</a>
+    <a href="#observability">Observability</a>
     <a href="https://github.com/fookiejs/fookie" class="btn btn-ghost" target="_blank">GitHub</a>
   </div>
 </nav>
@@ -694,6 +695,97 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
     <span class="k">for</span> <span class="f">sub</span> <span class="k">in</span> <span class="k">read</span> <span class="t">Subscription</span> <span class="p">{</span> <span class="f">active</span><span class="n">: </span><span class="f">eq</span><span class="p">(</span><span class="k">true</span><span class="p">) } {</span>
       <span class="f">res</span> <span class="n">= </span><span class="t">PaymentGateway</span><span class="p">(</span><span class="f">amount</span><span class="n">: </span><span class="f">sub</span><span class="n">.amount  </span><span class="f">card_token</span><span class="n">: </span><span class="f">sub</span><span class="n">.card_token</span><span class="p">)</span>
       <span class="k">update</span> <span class="t">Subscription</span><span class="p">(</span><span class="f">sub</span><span class="n">.id</span><span class="p">) {</span> <span class="f">charge_id</span> <span class="n">= </span><span class="f">res</span><span class="n">.charge_id </span><span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span></pre>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- OBSERVABILITY -->
+<section id="observability">
+  <div class="section-label">Observability</div>
+  <h2>Production-ready<br/>out of the box</h2>
+  <p class="section-sub">
+    No setup required. Metrics, traces, distributed sagas, and real-time events
+    are built into the runtime — not bolted on afterward.
+  </p>
+
+  <div class="philosophy-grid">
+    <div class="card">
+      <h3>Distributed tracing</h3>
+      <p>
+        Every GraphQL request, cron execution, and outbox job is automatically traced
+        with OpenTelemetry. Spans propagate through external worker calls so you can
+        follow a single request end-to-end across services.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Prometheus metrics</h3>
+      <p>
+        Operation latency, outbox queue depth, processed job counts, retry rates —
+        all exposed as Prometheus metrics with no instrumentation code.
+        Grafana dashboards ship with the Helm chart.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Outbox pattern</h3>
+      <p>
+        External calls in <code>after</code> blocks are persisted to an outbox table
+        before execution. If the worker is down, jobs retry automatically with
+        configurable backoff. No message broker needed.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Saga & compensation</h3>
+      <p>
+        Multi-step external workflows declare a <code>compensate</code> block.
+        If any step fails, compensation steps run in reverse order automatically —
+        giving you distributed rollback without saga orchestrators.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Real-time events</h3>
+      <p>
+        Models emit WebSocket events on every mutation. Clients subscribe to
+        model changes directly — no separate event bus, no polling, no extra infrastructure.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Structured logs</h3>
+      <p>
+        Every operation logs its model, duration, and outcome in structured JSON.
+        Ship to Loki, stdout, or any log aggregator.
+        Correlation IDs tie logs to traces automatically.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top: 48px;">
+    <div class="terminal-wrap" style="max-width:100%;">
+      <div class="terminal-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span>saga with compensation</span>
+      </div>
+      <pre><span class="k">model</span> <span class="t">Transfer</span> <span class="p">{</span>
+  <span class="k">fields</span> <span class="p">{</span>
+    <span class="f">from_id</span><span class="n">: </span><span class="t">id</span>       <span class="k">required</span>
+    <span class="f">to_id</span><span class="n">:   </span><span class="t">id</span>       <span class="k">required</span>
+    <span class="f">amount</span><span class="n">:  </span><span class="t">currency</span>  <span class="k">positive</span>
+    <span class="f">status</span><span class="n">:  </span><span class="t">string</span>
+  <span class="p">}</span>
+
+  <span class="k">create</span> <span class="p">{</span>
+    <span class="k">after</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
+      <span class="f">DebitAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.from_id  </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
+      <span class="f">CreditAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.to_id    </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">compensate</span> <span class="p">{</span>
+      <span class="f">RefundAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.from_id  </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span></pre>
