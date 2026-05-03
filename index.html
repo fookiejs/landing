@@ -750,12 +750,11 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
       </p>
     </div>
     <div class="card">
-      <h3>Optional saga rollback</h3>
+      <h3>Outbox retry &amp; saga</h3>
       <p>
-        External calls from <code>after</code> are queued and executed by the runtime worker.
-        For multi-step flows you can optionally pair those calls with a <code>compensate</code> block
-        of undo externals; when a forward step exhausts retries, the worker runs compensation in reverse.
-        GraphQL clients only invoke mutations — rollback is declared on the schema side and carried out server-side.
+        Multi-step workflows are modelled as sequences of external calls in <code>after</code> blocks.
+        Each step is persisted to the outbox, retried with configurable backoff, and traced end-to-end.
+        Compensation logic lives in the worker — the FQL schema stays clean.
       </p>
     </div>
     <div class="card">
@@ -781,7 +780,7 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
         <div class="dot dot-r"></div>
         <div class="dot dot-y"></div>
         <div class="dot dot-g"></div>
-        <span>optional compensate block (advanced)</span>
+        <span>saga — multi-step outbox flow</span>
       </div>
       <pre><span class="k">external</span> <span class="t">DebitAccount</span> <span class="p">{</span>
   <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>
@@ -791,11 +790,6 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
   <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>
   <span class="k">output</span> <span class="p">{</span> <span class="f">ok</span><span class="n">: </span><span class="t">boolean</span> <span class="p">}</span>
 <span class="p">}</span>
-<span class="k">external</span> <span class="t">RefundAccount</span> <span class="p">{</span>
-  <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>
-  <span class="k">output</span> <span class="p">{</span> <span class="f">ok</span><span class="n">: </span><span class="t">boolean</span> <span class="p">}</span>
-<span class="p">}</span>
-
 <span class="k">model</span> <span class="t">Transfer</span> <span class="p">{</span>
   <span class="k">fields</span> <span class="p">{</span>
     <span class="f">from_id</span><span class="n">: </span><span class="t">id</span>       <span class="k">required</span>
@@ -806,9 +800,6 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
     <span class="k">after</span> <span class="p">{</span>
       <span class="f">DebitAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.from_id  </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
       <span class="f">CreditAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.to_id    </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="k">compensate</span> <span class="p">{</span>
-      <span class="f">RefundAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.from_id  </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span></pre>
