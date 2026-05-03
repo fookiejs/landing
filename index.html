@@ -499,66 +499,60 @@
 
 <!-- PHILOSOPHY -->
 <section id="philosophy">
-  <div class="section-label">Philosophy</div>
-  <h2>Built around one idea</h2>
+  <div class="section-label">A different approach</div>
+  <h2>Model your domain.<br/>The rest follows.</h2>
   <p class="section-sub">
-    Most backends are the same thing written differently.
-    Fookie makes the common case trivial — and keeps the hard case possible.
+    Most backend frameworks give you tools and leave the structure up to you.
+    Fookie takes the opposite stance — the structure is the framework.
   </p>
 
   <div class="philosophy-grid">
     <div class="card">
-      <div class="card-icon">📐</div>
-      <h3>Schema is truth</h3>
+      <h3>One file describes everything</h3>
       <p>
-        Your FQL schema is the single source of truth. The database tables,
-        GraphQL types, input validation, and API surface all derive from it
-        automatically. Change the schema, everything updates.
+        Fields, validation rules, lifecycle hooks, background jobs, external integrations —
+        all in one schema. A new developer reads the <code>.fql</code> file and knows
+        exactly what the system does. No hunting across controllers, services, and middlewares.
       </p>
     </div>
     <div class="card">
-      <div class="card-icon">🔁</div>
-      <h3>Lifecycle over middleware</h3>
+      <h3>Different behavior means a different model</h3>
       <p>
-        Every operation has a <code>before</code> and <code>after</code> hook
-        with typed scope. No middleware chains, no magic injection — just
-        explicit, readable hooks at the model level.
+        When two entities start behaving differently, you create two models.
+        Not a flag, not a type column, not a branching handler — a new model
+        with its own operations. Your schema reflects your domain, not your edge cases.
       </p>
     </div>
     <div class="card">
-      <div class="card-icon">🚫</div>
-      <h3>No branching in schema</h3>
+      <h3>Operations are explicit contracts</h3>
       <p>
-        FQL has no <code>if</code>. If behavior differs, models differ.
-        This forces clean domain modeling instead of tangled conditionals
-        hiding inside CRUD handlers.
+        Every <code>create</code>, <code>read</code>, <code>update</code>, <code>delete</code>
+        declares exactly what data it receives and what it can do with it.
+        No implicit context, no hidden globals — the hook signature is the documentation.
       </p>
     </div>
     <div class="card">
-      <div class="card-icon">🔌</div>
-      <h3>Escape hatch built-in</h3>
+      <h3>Complex logic has a designated place</h3>
       <p>
-        Complex logic belongs outside the schema. <code>external</code> blocks
-        let you call any HTTP worker — Node.js, Python, anything — and compose
-        the result back into your FQL operations cleanly.
+        When business logic is too complex for the schema, it goes to an external worker —
+        a plain HTTP service in any language. The boundary between schema and code
+        is always clear and intentional.
       </p>
     </div>
     <div class="card">
-      <div class="card-icon">⚡</div>
-      <h3>Zero-config GraphQL</h3>
+      <h3>Validation is structural, not procedural</h3>
       <p>
-        Define a model, get <code>create_x</code>, <code>all_x</code>,
-        <code>update_x</code>, <code>delete_x</code>, <code>count_x</code>
-        mutations and queries immediately. No resolver code, no schema stitching.
+        Field constraints (<code>required</code>, <code>positive</code>, <code>min</code>)
+        and predicate guards live on the model itself. Validation doesn't live in
+        a separate layer that can drift out of sync.
       </p>
     </div>
     <div class="card">
-      <div class="card-icon">🕐</div>
-      <h3>Cron as first-class citizen</h3>
+      <h3>Time is part of the model</h3>
       <p>
-        Background jobs are schema-level constructs, not afterthoughts.
-        Write them in FQL next to the models they operate on, with full
-        access to the same lifecycle and filtering primitives.
+        Cron jobs are schema-level constructs defined next to the models they operate on.
+        A billing cycle, a nightly cleanup, a stats refresh — they belong in the schema,
+        not in a separate job runner configured elsewhere.
       </p>
     </div>
   </div>
