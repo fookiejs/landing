@@ -474,20 +474,27 @@
       <div class="dot dot-g"></div>
       <span>schema.fql</span>
     </div>
-    <pre><span class="k">model</span> <span class="t">Order</span> <span class="p">{</span>
+    <pre><span class="k">external</span> <span class="t">NotifyCustomer</span> <span class="p">{</span>
+  <span class="k">input</span> <span class="p">{</span> <span class="f">customer_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">event</span><span class="n">: </span><span class="t">string</span> <span class="p">}</span>
+  <span class="k">output</span> <span class="p">{</span> <span class="f">ok</span><span class="n">: </span><span class="t">boolean</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">enum</span> <span class="t">OrderStatus</span> <span class="p">{</span> <span class="f">pending</span> <span class="f">paid</span> <span class="f">shipped</span> <span class="p">}</span>
+
+<span class="k">model</span> <span class="t">Order</span> <span class="p">{</span>
   <span class="k">fields</span> <span class="p">{</span>
-    <span class="f">customer_id</span><span class="n">: </span><span class="t">id</span>       <span class="k">required</span>
-    <span class="f">amount</span><span class="n">:      </span><span class="t">currency</span>  <span class="k">positive</span>
+    <span class="f">customer_id</span><span class="n">: </span><span class="t">id</span>          <span class="k">required</span>
+    <span class="f">amount</span><span class="n">:      </span><span class="t">currency</span>     <span class="k">positive</span>
     <span class="f">status</span><span class="n">:      </span><span class="t">OrderStatus</span>
   <span class="p">}</span>
 
   <span class="k">create</span> <span class="p">{</span>
-    <span class="k">before</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
+    <span class="k">before</span> <span class="p">{</span>
       <span class="f">body</span><span class="n">.amount </span><span class="p">&gt;</span><span class="n"> 0</span>
       <span class="f">body</span><span class="n">.amount </span><span class="p">&lt;=</span><span class="n"> 10000</span>
     <span class="p">}</span>
-    <span class="k">after</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
-      <span class="f">Notify</span><span class="p">(</span><span class="f">customer_id</span><span class="n">: </span><span class="f">body</span><span class="n">.customer_id  </span><span class="f">event</span><span class="n">: </span><span class="s">"order_created"</span><span class="p">)</span>
+    <span class="k">after</span> <span class="p">{</span>
+      <span class="f">NotifyCustomer</span><span class="p">(</span><span class="f">customer_id</span><span class="n">: </span><span class="f">body</span><span class="n">.customer_id  </span><span class="f">event</span><span class="n">: </span><span class="s">"order_created"</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
 
@@ -529,7 +536,7 @@
       <p>
         Every <code>create</code>, <code>read</code>, <code>update</code>, <code>delete</code>
         declares exactly what data it receives and what it can do with it.
-        No implicit context, no hidden globals — the hook signature is the documentation.
+        No implicit context, no hidden globals — hooks and filters spell out scope explicitly.
       </p>
     </div>
     <div class="card">
@@ -577,12 +584,12 @@
         <p>Fields carry their own constraints. <code>required</code>, <code>min</code>, <code>max</code>, <code>pattern</code>, <code>positive</code> — validated before any hook runs.</p>
       </div>
       <div class="fql-feature">
-        <h4>Scoped hook parameters</h4>
-        <p><code>before(body, headers)</code> declares exactly what's available. No global state, no implicit injection — the signature is the documentation.</p>
+        <h4>Hook scopes</h4>
+        <p>Hooks use <code>before { }</code> and <code>after { }</code>, with an optional parameter list when you need it, e.g. <code>before(body)</code>. Everything referenced is explicit — no hidden globals.</p>
       </div>
       <div class="fql-feature">
-        <h4>Predicate guards with messages</h4>
-        <p><code>body.age &gt;= 18 : "Must be adult"</code> — conditions that throw with your exact message. Guard clauses instead of try/catch.</p>
+        <h4>Predicate guards</h4>
+        <p>Boolean expressions in <code>before</code> blocks act as assertions — for example <code>body.amount &gt; 0</code> and <code>body.amount &lt;= 10000</code> — evaluated before the row is written.</p>
       </div>
       <div class="fql-feature">
         <h4>Filter-based reads in hooks</h4>
@@ -609,18 +616,23 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
       </div>
       <div class="compare-card">
         <div class="compare-header good">✓ Fookie FQL</div>
-        <pre><span class="k">model</span> <span class="t">Order</span> <span class="p">{</span>
+        <pre><span class="k">external</span> <span class="t">NotifyCustomer</span> <span class="p">{</span>
+  <span class="k">input</span> <span class="p">{</span> <span class="f">customer_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">event</span><span class="n">: </span><span class="t">string</span> <span class="p">}</span>
+  <span class="k">output</span> <span class="p">{</span> <span class="f">ok</span><span class="n">: </span><span class="t">boolean</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">model</span> <span class="t">Order</span> <span class="p">{</span>
   <span class="k">fields</span> <span class="p">{</span>
     <span class="f">customer_id</span><span class="n">: </span><span class="t">id</span>       <span class="k">required</span>
     <span class="f">amount</span><span class="n">:      </span><span class="t">currency</span>  <span class="k">positive</span>
   <span class="p">}</span>
   <span class="k">create</span> <span class="p">{</span>
-    <span class="k">before</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
+    <span class="k">before</span> <span class="p">{</span>
       <span class="f">body</span><span class="n">.amount </span><span class="p">&gt;</span><span class="n"> 0</span>
       <span class="f">body</span><span class="n">.amount </span><span class="p">&lt;=</span><span class="n"> 10000</span>
     <span class="p">}</span>
-    <span class="k">after</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
-      <span class="f">Notify</span><span class="p">(</span><span class="f">customer_id</span><span class="n">: </span><span class="f">body</span><span class="n">.customer_id</span><span class="p">)</span>
+    <span class="k">after</span> <span class="p">{</span>
+      <span class="f">NotifyCustomer</span><span class="p">(</span><span class="f">customer_id</span><span class="n">: </span><span class="f">body</span><span class="n">.customer_id  </span><span class="f">event</span><span class="n">: </span><span class="s">"order_created"</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span></pre>
@@ -676,7 +688,6 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
       <pre><span class="k">external</span> <span class="t">PaymentGateway</span> <span class="p">{</span>
   <span class="k">input</span>  <span class="p">{</span> <span class="f">amount</span><span class="n">: </span><span class="t">currency</span>  <span class="f">card_token</span><span class="n">: </span><span class="t">string</span> <span class="p">}</span>
   <span class="k">output</span> <span class="p">{</span> <span class="f">charge_id</span><span class="n">: </span><span class="t">string</span>   <span class="f">success</span><span class="n">: </span><span class="t">boolean</span> <span class="p">}</span>
-  <span class="f">url</span><span class="n">: </span><span class="s">"http://payment-worker:3001"</span>
 <span class="p">}</span>
 
 <span class="k">model</span> <span class="t">Subscription</span> <span class="p">{</span>
@@ -739,11 +750,12 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
       </p>
     </div>
     <div class="card">
-      <h3>Saga & compensation</h3>
+      <h3>Optional saga rollback</h3>
       <p>
-        Multi-step external workflows declare a <code>compensate</code> block.
-        If any step fails, compensation steps run in reverse order automatically —
-        giving you distributed rollback without saga orchestrators.
+        External calls from <code>after</code> are queued and executed by the runtime worker.
+        For multi-step flows you can optionally pair those calls with a <code>compensate</code> block
+        of undo externals; when a forward step exhausts retries, the worker runs compensation in reverse.
+        GraphQL clients only invoke mutations — rollback is declared on the schema side and carried out server-side.
       </p>
     </div>
     <div class="card">
@@ -769,11 +781,20 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
         <div class="dot dot-r"></div>
         <div class="dot dot-y"></div>
         <div class="dot dot-g"></div>
-        <span>saga with compensation</span>
+        <span>optional compensate block (advanced)</span>
       </div>
-      <pre><span class="k">external</span> <span class="t">DebitAccount</span>  <span class="p">{</span> <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>  <span class="f">url</span><span class="n">: </span><span class="s">"http://payments:3001"</span> <span class="p">}</span>
-<span class="k">external</span> <span class="t">CreditAccount</span> <span class="p">{</span> <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>  <span class="f">url</span><span class="n">: </span><span class="s">"http://payments:3001"</span> <span class="p">}</span>
-<span class="k">external</span> <span class="t">RefundAccount</span> <span class="p">{</span> <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>  <span class="f">url</span><span class="n">: </span><span class="s">"http://payments:3001"</span> <span class="p">}</span>
+      <pre><span class="k">external</span> <span class="t">DebitAccount</span> <span class="p">{</span>
+  <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>
+  <span class="k">output</span> <span class="p">{</span> <span class="f">ok</span><span class="n">: </span><span class="t">boolean</span> <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">external</span> <span class="t">CreditAccount</span> <span class="p">{</span>
+  <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>
+  <span class="k">output</span> <span class="p">{</span> <span class="f">ok</span><span class="n">: </span><span class="t">boolean</span> <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">external</span> <span class="t">RefundAccount</span> <span class="p">{</span>
+  <span class="k">input</span> <span class="p">{</span> <span class="f">account_id</span><span class="n">: </span><span class="t">id</span>  <span class="f">amount</span><span class="n">: </span><span class="t">currency</span> <span class="p">}</span>
+  <span class="k">output</span> <span class="p">{</span> <span class="f">ok</span><span class="n">: </span><span class="t">boolean</span> <span class="p">}</span>
+<span class="p">}</span>
 
 <span class="k">model</span> <span class="t">Transfer</span> <span class="p">{</span>
   <span class="k">fields</span> <span class="p">{</span>
@@ -782,12 +803,10 @@ router.post(<span class="s">'/orders'</span>, auth, validate, async (req, res) =
     <span class="f">amount</span><span class="n">:  </span><span class="t">currency</span>  <span class="k">positive</span>
   <span class="p">}</span>
   <span class="k">create</span> <span class="p">{</span>
-    <span class="c">/* after: queued to outbox, retried on failure */</span>
-    <span class="k">after</span><span class="p">(</span><span class="f">body</span><span class="p">) {</span>
+    <span class="k">after</span> <span class="p">{</span>
       <span class="f">DebitAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.from_id  </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
       <span class="f">CreditAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.to_id    </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
     <span class="p">}</span>
-    <span class="c">/* compensate: runs in reverse if any step fails */</span>
     <span class="k">compensate</span> <span class="p">{</span>
       <span class="f">RefundAccount</span><span class="p">(</span><span class="f">account_id</span><span class="n">: </span><span class="f">body</span><span class="n">.from_id  </span><span class="f">amount</span><span class="n">: </span><span class="f">body</span><span class="n">.amount</span><span class="p">)</span>
     <span class="p">}</span>
